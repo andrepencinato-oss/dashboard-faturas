@@ -207,6 +207,32 @@ if not df.empty:
             status_selecionado = st.multiselect("Status:", status_lista, key="status_filter", help="Deixe vazio para ver Todos")
         else:
             status_selecionado = []
+
+    st.sidebar.markdown("---")
+    
+    # --- OPÇÃO DE TEMA ---
+    config_path = os.path.join(script_dir, '.streamlit', 'config.toml')
+    def get_current_theme():
+        try:
+            with open(config_path, 'r', encoding='utf-8') as f:
+                return "Claro" if 'base="light"' in f.read() else "Escuro"
+        except:
+            return "Escuro"
+            
+    tema_atual = get_current_theme()
+    template_grafico = "plotly_white" if tema_atual == "Claro" else "plotly_dark"
+    
+    def alterar_tema():
+        novo_tema = st.session_state["seletor_tema"]
+        texto_config = '[theme]\nbase="light"\nprimaryColor="#3b82f6"\nbackgroundColor="#ffffff"\nsecondaryBackgroundColor="#f1f5f9"\ntextColor="#0f172a"\nfont="sans serif"\n' if novo_tema == "Claro" else '[theme]\nbase="dark"\nprimaryColor="#3b82f6"\nbackgroundColor="#0f172a"\nsecondaryBackgroundColor="#1e293b"\ntextColor="#f8fafc"\nfont="sans serif"\n'
+        try:
+            os.makedirs(os.path.dirname(config_path), exist_ok=True)
+            with open(config_path, 'w', encoding='utf-8') as f:
+                f.write(texto_config)
+        except Exception as e:
+            pass
+            
+    st.sidebar.radio("🎨 Tema Visual:", ["Escuro", "Claro"], index=0 if tema_atual == "Escuro" else 1, key="seletor_tema", on_change=alterar_tema, horizontal=True)
     
     # --- APLICANDO OS FILTROS ESTÁTICOS DA SIDEBAR ---
     df_filtrado = df.copy()
@@ -314,7 +340,7 @@ if not df.empty:
                 y='VALOR_FRETE',
                 title="Análise de Gastos por Mês",
                 color_discrete_sequence=['#3b82f6'], # Cor primária do tema
-                template="plotly_dark",
+                template=template_grafico,
                 text_auto='.2s',
                 hover_data={
                     'MÊS_COMPLETO': False, 
@@ -352,7 +378,7 @@ if not df.empty:
                     orientation='h',
                     title="Gastos por UF",
                     color_discrete_sequence=['#ef4444'], # Destaque vermelho
-                    template="plotly_dark",
+                    template=template_grafico,
                     text_auto='.2s',
                     labels={'VALOR_FRETE': 'Valor Frete (R$)'}
                 )
@@ -387,7 +413,7 @@ if not df.empty:
                     orientation='h',
                     title="Gastos por Transportadora",
                     color_discrete_sequence=['#10b981'], # Destaque verde esmeralda
-                    template="plotly_dark",
+                    template=template_grafico,
                     text_auto='.2s',
                     labels={'VALOR_FRETE': 'Valor Frete (R$)'}
                 )
