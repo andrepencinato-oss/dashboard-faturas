@@ -113,16 +113,32 @@ if not df.empty:
     
     # --- VISÕES RÁPIDAS SALVAS ---
     st.sidebar.markdown("### 📌 Visões Rápidas")
-    def aplicar_visao_erecoli():
-        st.session_state["dup_filter"] = "Mostrar APENAS Cobranças Válidas (Para Pagamento)"
-        st.session_state["transp_filter"] = [t for t in ['E-RECOLI', 'E-REVERSA'] if t in df['NOME DA TRANSPORTADORA'].unique().tolist()]
-        st.session_state["ano_filter"] = [a for a in ['2024', '2025', '2026'] if a in df['ANO'].unique().tolist()]
-        st.session_state["mes_filter"] = []
-        st.session_state["uf_filter"] = []
-        if 'STATUS' in df.columns:
-             st.session_state["status_filter"] = [s for s in ['Falta Coletar', 'Falta Devolver', 'RETORNOU CD'] if s in df['STATUS'].dropna().astype(str).unique().tolist()]
+    
+    if "visao_erecoli_ativa" not in st.session_state:
+        st.session_state["visao_erecoli_ativa"] = False
 
-    st.sidebar.button("💰 Auditoria E-RECOLI", on_click=aplicar_visao_erecoli, use_container_width=True, help="Aplica os filtros para ver as cobranças indevidas e o valor total para pagamento da E-Recoli.")
+    def toggle_visao_erecoli():
+        if not st.session_state["visao_erecoli_ativa"]:
+            st.session_state["dup_filter"] = "Mostrar APENAS Cobranças Válidas (Para Pagamento)"
+            st.session_state["transp_filter"] = [t for t in ['E-RECOLI', 'E-REVERSA'] if t in df['NOME DA TRANSPORTADORA'].unique().tolist()]
+            st.session_state["ano_filter"] = [a for a in ['2024', '2025', '2026'] if a in df['ANO'].unique().tolist()]
+            st.session_state["mes_filter"] = []
+            st.session_state["uf_filter"] = []
+            if 'STATUS' in df.columns:
+                 st.session_state["status_filter"] = [s for s in ['Falta Coletar', 'Falta Devolver', 'RETORNOU CD'] if s in df['STATUS'].dropna().astype(str).unique().tolist()]
+            st.session_state["visao_erecoli_ativa"] = True
+        else:
+            st.session_state["dup_filter"] = "Mostrar Todas as Notas"
+            st.session_state["transp_filter"] = []
+            st.session_state["ano_filter"] = []
+            st.session_state["mes_filter"] = []
+            st.session_state["uf_filter"] = []
+            st.session_state["status_filter"] = []
+            st.session_state["visao_erecoli_ativa"] = False
+
+    lbl_btn = "❌ Limpar Visão E-RECOLI" if st.session_state.get("visao_erecoli_ativa") else "💰 Auditoria E-RECOLI"
+    hlp_btn = "Remove os filtros aplicados." if st.session_state.get("visao_erecoli_ativa") else "Aplica os filtros para ver as cobranças indevidas e o valor total para pagamento da E-Recoli."
+    st.sidebar.button(lbl_btn, on_click=toggle_visao_erecoli, use_container_width=True, help=hlp_btn)
     st.sidebar.markdown("---")
     
     # Botão para atualizar a base de dados
