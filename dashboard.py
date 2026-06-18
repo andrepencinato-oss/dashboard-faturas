@@ -211,28 +211,41 @@ if not df.empty:
     st.sidebar.markdown("---")
     
     # --- OPÇÃO DE TEMA ---
-    config_path = os.path.join(script_dir, '.streamlit', 'config.toml')
-    def get_current_theme():
-        try:
-            with open(config_path, 'r', encoding='utf-8') as f:
-                return "Claro" if 'base="light"' in f.read() else "Escuro"
-        except:
-            return "Escuro"
-            
-    tema_atual = get_current_theme()
-    template_grafico = "plotly_white" if tema_atual == "Claro" else "plotly_dark"
+    tema_selecionado = st.sidebar.radio("🎨 Tema Visual:", ["Escuro", "Claro"], index=0, horizontal=True)
     
-    def alterar_tema():
-        novo_tema = st.session_state["seletor_tema"]
-        texto_config = '[theme]\nbase="light"\nprimaryColor="#3b82f6"\nbackgroundColor="#ffffff"\nsecondaryBackgroundColor="#f1f5f9"\ntextColor="#0f172a"\nfont="sans serif"\n' if novo_tema == "Claro" else '[theme]\nbase="dark"\nprimaryColor="#3b82f6"\nbackgroundColor="#0f172a"\nsecondaryBackgroundColor="#1e293b"\ntextColor="#f8fafc"\nfont="sans serif"\n'
-        try:
-            os.makedirs(os.path.dirname(config_path), exist_ok=True)
-            with open(config_path, 'w', encoding='utf-8') as f:
-                f.write(texto_config)
-        except Exception as e:
-            pass
-            
-    st.sidebar.radio("🎨 Tema Visual:", ["Escuro", "Claro"], index=0 if tema_atual == "Escuro" else 1, key="seletor_tema", on_change=alterar_tema, horizontal=True)
+    if tema_selecionado == "Claro":
+        st.markdown("""
+        <style>
+            [data-testid="stAppViewContainer"] {
+                background-color: #f8fafc !important;
+            }
+            [data-testid="stSidebar"] {
+                background-color: #ffffff !important;
+            }
+            [data-testid="stHeader"] {
+                background-color: rgba(248, 250, 252, 0.8) !important;
+            }
+            .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, 
+            .stText, label {
+                color: #0f172a !important;
+            }
+            [data-testid="stMetricValue"], [data-testid="stMetricLabel"] {
+                color: #0f172a !important;
+            }
+            .streamlit-expanderHeader {
+                color: #0f172a !important;
+            }
+            button[data-baseweb="tab"] p {
+                color: #64748b !important;
+            }
+            button[data-baseweb="tab"][aria-selected="true"] p {
+                color: #3b82f6 !important;
+            }
+        </style>
+        """, unsafe_allow_html=True)
+        template_grafico = "plotly_white"
+    else:
+        template_grafico = "plotly_dark"
     
     # --- APLICANDO OS FILTROS ESTÁTICOS DA SIDEBAR ---
     df_filtrado = df.copy()
