@@ -263,15 +263,15 @@ if not df.empty:
         
     if busca_nf:
         busca_nf = busca_nf.strip().lower()
-        ticket_mask = False
-        if 'TICKET' in df_filtrado.columns:
-            ticket_mask = df_filtrado['TICKET'].astype(str).str.lower().str.contains(busca_nf)
-            
-        mask = (
-            df_filtrado['NUMERO DA FATURA'].astype(str).str.lower().str.contains(busca_nf) |
-            df_filtrado['NOTA FISCAL'].astype(str).str.lower().str.contains(busca_nf) |
-            ticket_mask
-        )
+        mask = pd.Series(False, index=df_filtrado.index)
+        
+        colunas_busca = ['NUMERO DA FATURA', 'NOTA FISCAL', 'TICKET']
+        for col in colunas_busca:
+            if col in df_filtrado.columns:
+                # regex=False para texto exato (evita crash com metacaracteres), na=False para evitar erros de NaN
+                mascara_coluna = df_filtrado[col].astype(str).str.lower().str.contains(busca_nf, na=False, regex=False)
+                mask = mask | mascara_coluna
+                
         df_filtrado = df_filtrado[mask]
         
     # Ordenar por vencimento mais antigo
