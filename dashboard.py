@@ -265,16 +265,23 @@ if not df.empty:
         
     if busca_nf:
         busca_nf = busca_nf.strip().lower()
-        mask = pd.Series(False, index=df_filtrado.index)
+        mask_inicial = pd.Series(False, index=df_filtrado.index)
         
         colunas_busca = ['NUMERO DA FATURA', 'NOTA FISCAL', 'TICKET']
         for col in colunas_busca:
             if col in df_filtrado.columns:
-                # regex=False para texto exato (evita crash com metacaracteres), na=False para evitar erros de NaN
                 mascara_coluna = df_filtrado[col].astype(str).str.lower().str.contains(busca_nf, na=False, regex=False)
-                mask = mask | mascara_coluna
+                mask_inicial = mask_inicial | mascara_coluna
                 
-        df_filtrado = df_filtrado[mask]
+        # Obter todas as notas fiscais das linhas encontradas na busca
+        notas_encontradas = df_filtrado.loc[mask_inicial, 'NOTA FISCAL'].dropna().unique()
+        
+        # Expandir o filtro para trazer todas as ocorrências dessas notas na base
+        if len(notas_encontradas) > 0:
+            mask_expandida = df_filtrado['NOTA FISCAL'].isin(notas_encontradas)
+            df_filtrado = df_filtrado[mask_expandida]
+        else:
+            df_filtrado = df_filtrado[mask_inicial]
         
     # Ordenar por vencimento mais antigo
     if 'DATA DE VENCIMENTO' in df_filtrado.columns:
@@ -289,15 +296,12 @@ if not df.empty:
         valor_duplicado_real = df_filtrado.loc[mask_excesso, 'VALOR FRETE'].sum()
         
     # Aplicar o filtro de Duplicidade selecionado pelo usuário
-    if busca_nf:
-        st.sidebar.info("🔍 Busca ativa: O Filtro de Duplicidade foi ignorado para exibir o resultado da sua pesquisa.")
-    else:
-        if filtro_duplicadas == "Mostrar APENAS as Repetidas":
-            duplicadas_mask = df_filtrado.duplicated(subset=['NOTA FISCAL'], keep=False)
-            df_filtrado = df_filtrado[duplicadas_mask]
-        elif filtro_duplicadas == "Mostrar APENAS Cobranças Válidas (Para Pagamento)":
-            validas_mask = ~df_filtrado.duplicated(subset=['NOTA FISCAL'], keep='first')
-            df_filtrado = df_filtrado[validas_mask]
+    if filtro_duplicadas == "Mostrar APENAS as Repetidas":
+        duplicadas_mask = df_filtrado.duplicated(subset=['NOTA FISCAL'], keep=False)
+        df_filtrado = df_filtrado[duplicadas_mask]
+    elif filtro_duplicadas == "Mostrar APENAS Cobranças Válidas (Para Pagamento)":
+        validas_mask = ~df_filtrado.duplicated(subset=['NOTA FISCAL'], keep='first')
+        df_filtrado = df_filtrado[validas_mask]
         
     # Lendo seleções cruzadas dos gráficos
     sel_mes = st.session_state.get("chart_mes", {}).get("selection", {}).get("points", [])
