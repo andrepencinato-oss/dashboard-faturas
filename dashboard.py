@@ -11,9 +11,11 @@ def check_password():
     def password_entered():
         # Tenta pegar a senha do painel de Secrets da Nuvem, se não achar usa a senha fixa
         senha_correta = st.secrets.get("senha_painel", "e-recoli2026")
-        if st.session_state["password"] == senha_correta:
+        senha_digitada = st.session_state.get("password", "")
+        if senha_digitada == senha_correta:
             st.session_state["password_correct"] = True
-            del st.session_state["password"]
+            if "password" in st.session_state:
+                del st.session_state["password"]
         else:
             st.session_state["password_correct"] = False
 
