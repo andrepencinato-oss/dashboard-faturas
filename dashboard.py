@@ -175,7 +175,7 @@ if not df.empty:
         [
             "Mostrar Todas as Notas", 
             "Mostrar APENAS Cobranças Válidas (Para Pagamento)",
-            "Mostrar APENAS as Repetidas (Valor Excedente)"
+            "Mostrar APENAS as Repetidas"
         ],
         key="dup_filter"
     )
@@ -287,8 +287,8 @@ if not df.empty:
         valor_duplicado_real = df_filtrado.loc[mask_excesso, 'VALOR FRETE'].sum()
         
     # Aplicar o filtro de Duplicidade selecionado pelo usuário
-    if filtro_duplicadas == "Mostrar APENAS as Repetidas (Valor Excedente)":
-        duplicadas_mask = df_filtrado.duplicated(subset=['NOTA FISCAL'], keep='first')
+    if filtro_duplicadas == "Mostrar APENAS as Repetidas":
+        duplicadas_mask = df_filtrado.duplicated(subset=['NOTA FISCAL'], keep=False)
         df_filtrado = df_filtrado[duplicadas_mask]
     elif filtro_duplicadas == "Mostrar APENAS Cobranças Válidas (Para Pagamento)":
         validas_mask = ~df_filtrado.duplicated(subset=['NOTA FISCAL'], keep='first')
@@ -448,19 +448,21 @@ if not df.empty:
         import io
         st.subheader(f"Tabela de Detalhamento ({len(df_filtrado)} registros)")
         
-        m1, m2 = st.columns(2)
+        m1, m2, m3 = st.columns(3)
         total_sidebar = df_filtrado['VALOR FRETE'].sum() if 'VALOR FRETE' in df_filtrado.columns else 0.0
         str_total_sidebar = f"R$ {total_sidebar:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
         
-        if filtro_duplicadas == "Mostrar APENAS as Repetidas (Valor Excedente)":
-            m1.metric("🚨 Valor Excedente (Soma das Repetições na Tabela)", str_total_sidebar)
+        m1.metric("📄 Qtd. de Notas (Linhas na Tabela)", f"{len(df_filtrado)}")
+        
+        if filtro_duplicadas == "Mostrar APENAS as Repetidas":
+            m2.metric("🚨 Valor das Notas Repetidas (Soma na Tabela)", str_total_sidebar)
         elif filtro_duplicadas == "Mostrar APENAS Cobranças Válidas (Para Pagamento)":
-            m1.metric("💰 Valor Total Seguro (Livre de Duplicidade)", str_total_sidebar)
+            m2.metric("💰 Valor Total Seguro (Livre de Duplicidade)", str_total_sidebar)
         else:
-            m1.metric("💰 Valor Total na Tabela (Misturado)", str_total_sidebar)
+            m2.metric("💰 Valor Total na Tabela (Misturado)", str_total_sidebar)
             if valor_duplicado_real > 0:
                 str_duplicado = f"R$ {valor_duplicado_real:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
-                m2.metric("🚨 Risco de Duplicidade Oculto", str_duplicado)
+                m3.metric("🚨 Risco de Duplicidade Oculto", str_duplicado)
 
         tem_motivo = 'MOTIVO' in df_filtrado.columns
         tem_vencimento = 'DATA DE VENCIMENTO' in df_filtrado.columns
