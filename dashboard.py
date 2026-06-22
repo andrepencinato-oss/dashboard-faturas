@@ -289,12 +289,15 @@ if not df.empty:
         valor_duplicado_real = df_filtrado.loc[mask_excesso, 'VALOR FRETE'].sum()
         
     # Aplicar o filtro de Duplicidade selecionado pelo usuário
-    if filtro_duplicadas == "Mostrar APENAS as Repetidas":
-        duplicadas_mask = df_filtrado.duplicated(subset=['NOTA FISCAL'], keep=False)
-        df_filtrado = df_filtrado[duplicadas_mask]
-    elif filtro_duplicadas == "Mostrar APENAS Cobranças Válidas (Para Pagamento)":
-        validas_mask = ~df_filtrado.duplicated(subset=['NOTA FISCAL'], keep='first')
-        df_filtrado = df_filtrado[validas_mask]
+    if busca_nf:
+        st.sidebar.info("🔍 Busca ativa: O Filtro de Duplicidade foi ignorado para exibir o resultado da sua pesquisa.")
+    else:
+        if filtro_duplicadas == "Mostrar APENAS as Repetidas":
+            duplicadas_mask = df_filtrado.duplicated(subset=['NOTA FISCAL'], keep=False)
+            df_filtrado = df_filtrado[duplicadas_mask]
+        elif filtro_duplicadas == "Mostrar APENAS Cobranças Válidas (Para Pagamento)":
+            validas_mask = ~df_filtrado.duplicated(subset=['NOTA FISCAL'], keep='first')
+            df_filtrado = df_filtrado[validas_mask]
         
     # Lendo seleções cruzadas dos gráficos
     sel_mes = st.session_state.get("chart_mes", {}).get("selection", {}).get("points", [])
